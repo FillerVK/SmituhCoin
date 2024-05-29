@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMITUH COIN</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>$mituh Coins: <span id="coinCount">0</span></h1>
+        <div id="clickArea">
+            <img src="image.png" alt="Click Image" id="clickImage">
+        </div>
+        <button id="shopButton">Shop</button>
+        <button id="tasksButton">Tasks</button>
+        <div id="shop" class="modal hidden">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Магазин</h2>
+                <button id="upgradeClick">Multitap (Ціна: <span id="clickUpgradeCost">10</span>)</button>
+                <button id="upgradeLimit">Upgrade Limit (Ціна: <span id="limitUpgradeCost">20</span>)</button>
+                <button id="upgradeRegen">Upgrade Recharger (Ціна: <span id="regenUpgradeCost">30</span>)</button>
+            </div>
+        </div>
+        <div id="tasks" class="modal hidden">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Завдання</h2>
+                <button class="taskButton" data-reward="1000" data-link="https://t.me/cexio_tap_bot?start=1716841637676245">Subscribe to our onlyfans! (Нагорода: 1000 монет)</button>
+                <button class="taskButton" data-reward="2000" data-link="https://slotoking.ua/">Join to kazik (Нагорода: 2000 монет)</button>
+                <button class="taskButton" data-reward="3000" data-link="https://t.me/s/lgbt_ua?q=%23gayua&before=18860">Join our official TG channel (Нагорода: 3000 монет)</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
