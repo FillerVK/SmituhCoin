@@ -1,35 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
     const userId = 'unique_user_id'; // Замість цього використовуйте унікальний ідентифікатор користувача
-    const coinCountElement = document.getElementById('coinCount');
-    const energyCountElement = document.getElementById('energyCount');
-    const clickImage = document.getElementById('clickImage');
-    let coins = 0;
-    let energy = 1000;
 
-    // Отримання монет та енергії при завантаженні сторінки
-    fetch(`/get_coins?user_id=${userId}`)
+    // Елементи для відображення монет та енергії
+    const coinsElement = document.getElementById('coinCount');
+    const energyElement = document.getElementById('energyCount');
+    
+    let coins = 0;
+    let energy = 100;
+
+    // Отримання даних при завантаженні сторінки
+    fetch(`/get_user_data?user_id=${userId}`)
         .then(response => response.json())
         .then(data => {
             coins = data.coins;
-            coinCountElement.textContent = coins;
-        });
-
-    fetch(`/get_energy?user_id=${userId}`)
-        .then(response => response.json())
-        .then(data => {
             energy = data.energy;
-            energyCountElement.textContent = energy;
+            coinsElement.textContent = coins;
+            energyElement.textContent = energy;
         });
 
-    clickImage.addEventListener('click', () => {
+    document.getElementById('clickImage').addEventListener('click', () => {
         if (energy > 0) {
             coins += 1;
             energy -= 1;
-            coinCountElement.textContent = coins;
-            energyCountElement.textContent = energy;
+            coinsElement.textContent = coins;
+            energyElement.textContent = energy;
 
-            // Оновлення монет та енергії на сервері
-            fetch('/update_coins', {
+            // Оновлення даних на сервері
+            fetch('/update_user_data', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -39,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 if (data.status !== 'success') {
-                    alert('Не вдалося зберегти монети та енергію!');
+                    alert('Не вдалося зберегти дані!');
                 }
             });
         } else {
@@ -47,30 +44,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.querySelectorAll('.close').forEach(closeButton => {
-        closeButton.addEventListener('click', () => {
-            closeButton.closest('.modal').classList.add('hidden');
-        });
-    });
+    // Налаштування модальних вікон магазину та завдань
+    const shopModal = document.getElementById('shop');
+    const tasksModal = document.getElementById('tasks');
+    const closeModalButtons = document.querySelectorAll('.close');
 
     document.getElementById('shopButton').addEventListener('click', () => {
-        document.getElementById('shop').classList.remove('hidden');
+        shopModal.classList.remove('hidden');
     });
 
     document.getElementById('tasksButton').addEventListener('click', () => {
-        document.getElementById('tasks').classList.remove('hidden');
+        tasksModal.classList.remove('hidden');
     });
 
-    document.querySelectorAll('.taskButton').forEach(taskButton => {
-        taskButton.addEventListener('click', () => {
-            const reward = parseInt(taskButton.dataset.reward);
-            const link = taskButton.dataset.link;
-            window.open(link, '_blank');
-            coins += reward;
-            coinCountElement.textContent = coins;
+    closeModalButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            shopModal.classList.add('hidden');
+            tasksModal.classList.add('hidden');
+        });
+    });
 
-            // Оновлення монет на сервері після виконання завдання
-            fetch('/update_coins', {
+    document.querySelectorAll('.taskButton').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const reward = parseInt(event.target.dataset.reward);
+            const link = event.target.dataset.link;
+            coins += reward;
+            coinsElement.textContent = coins;
+
+            // Оновлення даних на сервері
+            fetch('/update_user_data', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -79,8 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status !== 'success') {
-                    alert('Не вдалося зберегти монети та енергію!');
+                if (data.status === 'success') {
+                    window.location.href = link;
+                } else {
+                    alert('Не вдалося зберегти дані!');
                 }
             });
         });
