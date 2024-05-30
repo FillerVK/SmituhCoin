@@ -6,17 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const coinsElement = document.getElementById('coinCount');
     const energyElement = document.getElementById('energyCount');
 
-    let coins = 0;
-    let energy = 100;
-    let userId;
-
-    // Виконати автентифікацію користувача
     auth.signInAnonymously().then(() => {
         userId = auth.currentUser.uid;
         loadUserData(userId);
     }).catch((error) => {
         console.error("Authentication error: ", error);
     });
+
+    let coins =  doc.data().coins;
+    let energy = 100;
+    let userId;
 
     function loadUserData(userId) {
         // Отримання даних при завантаженні сторінки
