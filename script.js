@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const userId = 'unique_user_id'; // Замість цього використовуйте унікальний ідентифікатор користувача
 
+    const db = firebase.firestore();
+
     // Елементи для відображення монет та енергії
     const coinsElement = document.getElementById('coinCount');
     const energyElement = document.getElementById('energyCount');
@@ -9,14 +11,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let energy = 100;
 
     // Отримання даних при завантаженні сторінки
-    fetch(`/get_user_data?user_id=${userId}`)
-        .then(response => response.json())
-        .then(data => {
-            coins = data.coins;
-            energy = data.energy;
+    db.collection('users').doc(userId).get().then((doc) => {
+        if (doc.exists) {
+            coins = doc.data().coins;
+            energy = doc.data().energy;
             coinsElement.textContent = coins;
             energyElement.textContent = energy;
-        });
+        } else {
+            // Створити новий документ якщо не існує
+            db.collection('users').doc(userId).set({
+                coins: coins,
+                energy: energy
+            });
+        }
+    }).catch((error) => {
+        console.log("Error getting document:", error);
+    });
 
     document.getElementById('clickImage').addEventListener('click', () => {
         if (energy > 0) {
@@ -25,19 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
             coinsElement.textContent = coins;
             energyElement.textContent = energy;
 
-            // Оновлення даних на сервері
-            fetch('/update_user_data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user_id: userId, coins: coins, energy: energy })
+            // Оновлення даних в Firestore
+            db.collection('users').doc(userId).update({
+                coins: coins,
+                energy: energy
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status !== 'success') {
-                    alert('Не вдалося зберегти дані!');
-                }
+            .then(() => {
+                console.log("Document successfully updated!");
+            })
+            .catch((error) => {
+                console.error("Error updating document: ", error);
             });
         } else {
             alert('Недостатньо енергії!');
@@ -71,21 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
             coins += reward;
             coinsElement.textContent = coins;
 
-            // Оновлення даних на сервері
-            fetch('/update_user_data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user_id: userId, coins: coins, energy: energy })
+            // Оновлення даних в Firestore
+            db.collection('users').doc(userId).update({
+                coins: coins,
+                energy: energy
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    window.location.href = link;
-                } else {
-                    alert('Не вдалося зберегти дані!');
-                }
+            .then(() => {
+                window.location.href = link;
+            })
+            .catch((error) => {
+                console.error("Error updating document: ", error);
             });
         });
     });
