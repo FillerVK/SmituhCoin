@@ -1,32 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const userId = 'unique_user_id'; // Замість цього використовуйте унікальний ідентифікатор користувача
-
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
     // Елементи для відображення монет та енергії
     const coinsElement = document.getElementById('coinCount');
     const energyElement = document.getElementById('energyCount');
-    
+
     let coins = 0;
     let energy = 100;
+    let userId;
 
-    // Отримання даних при завантаженні сторінки
-    db.collection('users').doc(userId).get().then((doc) => {
-        if (doc.exists) {
-            coins = doc.data().coins;
-            energy = doc.data().energy;
-            coinsElement.textContent = coins;
-            energyElement.textContent = energy;
-        } else {
-            // Створити новий документ якщо не існує
-            db.collection('users').doc(userId).set({
-                coins: coins,
-                energy: energy
-            });
-        }
+    // Виконати автентифікацію користувача
+    auth.signInAnonymously().then(() => {
+        userId = auth.currentUser.uid;
+        loadUserData(userId);
     }).catch((error) => {
-        console.log("Error getting document:", error);
+        console.error("Authentication error: ", error);
     });
+
+    function loadUserData(userId) {
+        // Отримання даних при завантаженні сторінки
+        db.collection('users').doc(userId).get().then((doc) => {
+            if (doc.exists) {
+                coins = doc.data().coins;
+                energy = doc.data().energy;
+                coinsElement.textContent = coins;
+                energyElement.textContent = energy;
+            } else {
+                // Створити новий документ якщо не існує
+                db.collection('users').doc(userId).set({
+                    coins: coins,
+                    energy: energy
+                });
+            }
+        }).catch((error) => {
+            console.log("Error getting document:", error);
+        });
+    }
 
     document.getElementById('clickImage').addEventListener('click', () => {
         if (energy > 0) {
