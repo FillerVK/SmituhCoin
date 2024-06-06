@@ -1,72 +1,55 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
     const coinsElement = document.getElementById('coinCount');
     const energyElement = document.getElementById('energyCount');
 
-    let coins = 0;
-    let energy = 100;
-    let userId;
-    let clickUpgradeCost = 10;
-    let limitUpgradeCost = 20;
-    let regenUpgradeCost = 30;
+    let coins = parseInt(localStorage.getItem('coins')) || 0;
+    let energy = parseInt(localStorage.getItem('energy')) || 100;
+    let maxEnergy = parseInt(localStorage.getItem('maxEnergy')) || 100;
+    let clickUpgradeCost = parseInt(localStorage.getItem('clickUpgradeCost')) || 10;
+    let limitUpgradeCost = parseInt(localStorage.getItem('limitUpgradeCost')) || 20;
+    let regenUpgradeCost = parseInt(localStorage.getItem('regenUpgradeCost')) || 30;
+    let regenRate = parseInt(localStorage.getItem('regenRate')) || 1;
 
-    auth.signInAnonymously().then(() => {
-        userId = auth.currentUser.uid;
-        loadUserData(userId);
-    }).catch((error) => {
-        console.error("Authentication error: ", error);
-    });
+    let clickMultiplier = parseInt(localStorage.getItem('clickMultiplier')) || 1;
+    let energyConsumptionPerClick = parseInt(localStorage.getItem('energyConsumptionPerClick')) || 1;
 
-    function loadUserData(userId) {
-        db.collection('users').doc(userId).get().then((doc) => {
-            if (doc.exists) {
-                coins = doc.data().coins;
-                energy = doc.data().energy;
-                clickUpgradeCost = doc.data().clickUpgradeCost || clickUpgradeCost;
-                limitUpgradeCost = doc.data().limitUpgradeCost || limitUpgradeCost;
-                regenUpgradeCost = doc.data().regenUpgradeCost || regenUpgradeCost;
-                coinsElement.textContent = coins;
-                energyElement.textContent = energy;
-                document.getElementById('clickUpgradeCost').textContent = clickUpgradeCost;
-                document.getElementById('limitUpgradeCost').textContent = limitUpgradeCost;
-                document.getElementById('regenUpgradeCost').textContent = regenUpgradeCost;
-            } else {
-                db.collection('users').doc(userId).set({
-                    coins: coins,
-                    energy: energy,
-                    clickUpgradeCost: clickUpgradeCost,
-                    limitUpgradeCost: limitUpgradeCost,
-                    regenUpgradeCost: regenUpgradeCost
-                });
-            }
-        }).catch((error) => {
-            console.log("Error getting document:", error);
-        });
+    coinsElement.textContent = coins;
+    energyElement.textContent = energy;
+    document.getElementById('clickUpgradeCost').textContent = clickUpgradeCost;
+    document.getElementById('limitUpgradeCost').textContent = limitUpgradeCost;
+    document.getElementById('regenUpgradeCost').textContent = regenUpgradeCost;
+
+    function saveGameState() {
+        localStorage.setItem('coins', coins);
+        localStorage.setItem('energy', energy);
+        localStorage.setItem('maxEnergy', maxEnergy);
+        localStorage.setItem('clickUpgradeCost', clickUpgradeCost);
+        localStorage.setItem('limitUpgradeCost', limitUpgradeCost);
+        localStorage.setItem('regenUpgradeCost', regenUpgradeCost);
+        localStorage.setItem('regenRate', regenRate);
+        localStorage.setItem('clickMultiplier', clickMultiplier);
+        localStorage.setItem('energyConsumptionPerClick', energyConsumptionPerClick);
     }
 
     document.getElementById('clickImage').addEventListener('click', () => {
-        if (energy > 0) {
-            coins += 1;
-            energy -= 1;
+        if (energy >= energyConsumptionPerClick) {
+            coins += clickMultiplier;
+            energy -= energyConsumptionPerClick;
             coinsElement.textContent = coins;
             energyElement.textContent = energy;
-
-            db.collection('users').doc(userId).update({
-                coins: coins,
-                energy: energy
-            })
-            .then(() => {
-                console.log("Document successfully updated!");
-            })
-            .catch((error) => {
-                console.error("Error updating document: ", error);
-            });
+            saveGameState();
         } else {
             alert('Недостатньо енергії!');
         }
     });
+
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy = Math.min(maxEnergy, energy + regenRate);
+            energyElement.textContent = energy;
+            saveGameState();
+        }
+    }, 2000);
 
     const shopModal = document.getElementById('shop');
     const tasksModal = document.getElementById('tasks');
@@ -95,19 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (coins >= clickUpgradeCost) {
             coins -= clickUpgradeCost;
             clickUpgradeCost *= 2;
+            clickMultiplier *= 2;
+            energyConsumptionPerClick *= 2;
             coinsElement.textContent = coins;
             document.getElementById('clickUpgradeCost').textContent = clickUpgradeCost;
-
-            db.collection('users').doc(userId).update({
-                coins: coins,
-                clickUpgradeCost: clickUpgradeCost
-            })
-            .then(() => {
-                console.log("Click upgrade purchased successfully!");
-            })
-            .catch((error) => {
-                console.error("Error updating document: ", error);
-            });
+            saveGameState();
         } else {
             alert('Недостатньо монет для покупки!');
         }
@@ -117,19 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (coins >= limitUpgradeCost) {
             coins -= limitUpgradeCost;
             limitUpgradeCost *= 2;
+            maxEnergy += 500;
             coinsElement.textContent = coins;
-            document.getElementById('limitUpgradeCost').textContent = limitUpgradeCost;
-
-            db.collection('users').doc(userId).update({
-                coins: coins,
-                limitUpgradeCost: limitUpgradeCost
-            })
-            .then(() => {
-                console.log("Limit upgrade purchased successfully!");
-            })
-            .catch((error) => {
-                console.error("Error updating document: ", error);
-            });
+            saveGameState();
         } else {
             alert('Недостатньо монет для покупки!');
         }
@@ -139,19 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (coins >= regenUpgradeCost) {
             coins -= regenUpgradeCost;
             regenUpgradeCost *= 2;
+            regenRate += 1;
             coinsElement.textContent = coins;
             document.getElementById('regenUpgradeCost').textContent = regenUpgradeCost;
-
-            db.collection('users').doc(userId).update({
-                coins: coins,
-                regenUpgradeCost: regenUpgradeCost
-            })
-            .then(() => {
-                console.log("Regen upgrade purchased successfully!");
-            })
-            .catch((error) => {
-                console.error("Error updating document: ", error);
-            });
+            saveGameState();
         } else {
             alert('Недостатньо монет для покупки!');
         }
@@ -163,17 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const link = event.target.dataset.link;
             coins += reward;
             coinsElement.textContent = coins;
-
-            db.collection('users').doc(userId).update({
-                coins: coins,
-                energy: energy
-            })
-            .then(() => {
-                window.location.href = link;
-            })
-            .catch((error) => {
-                console.error("Error updating document: ", error);
-            });
+            saveGameState();
+            window.location.href = link;
         });
     });
 });
