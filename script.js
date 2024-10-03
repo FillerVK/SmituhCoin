@@ -63,6 +63,38 @@ document.addEventListener('DOMContentLoaded', () => {
             saveGameState();
         }
     }, 2000);
-    
-    // Інші функції для магазину та завдань залишаються незмінними...
+
+    // Функція для відкриття і закриття модальних вікон
+    const shopButton = document.getElementById('shopButton');
+    const tasksButton = document.getElementById('tasksButton');
+    const shopModal = document.getElementById('shop');
+    const tasksModal = document.getElementById('tasks');
+    const closeButtons = document.querySelectorAll('.close');
+
+    // Відкриття модальних вікон
+    shopButton.addEventListener('click', () => {
+        shopModal.classList.remove('hidden');
+    });
+
+    tasksButton.addEventListener('click', () => {
+        tasksModal.classList.remove('hidden');
+    });
+
+    // Закриття модальних вікон
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            shopModal.classList.add('hidden');
+            tasksModal.classList.add('hidden');
+        });
+    });
+
+    // Закриття модального вікна при кліку поза його межами
+    window.addEventListener('click', (event) => {
+        if (event.target === shopModal) {
+            shopModal.classList.add('hidden');
+        }
+        if (event.target === tasksModal) {
+            tasksModal.classList.add('hidden');
+        }
+    });
 });
